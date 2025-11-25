@@ -420,26 +420,37 @@
         .choice-btn {
             flex-direction: column;
             width: 130px;
-            min-height: 180px;
-            /* Ensure consistent height */
-            justify-content: flex-start;
-            /* Align content to top */
+            min-height: 200px;
+            justify-content: space-between;
             text-align: center;
-            gap: 10px;
             padding: 15px 10px;
-            /* Add padding */
+            gap: 8px;
+        }
+
+        .choice-icon {
+            font-size: 3rem;
+            margin-bottom: 5px;
+        }
+
+        .choice-label {
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        .token-bag-info {
+            font-size: 0.75rem;
+            color: #888;
+            margin-top: -5px;
         }
 
         .choice-target {
             font-size: 0.8rem;
             color: #666;
             background: #eee;
-            padding: 4px 8px;
+            padding: 6px 8px;
             border-radius: 4px;
             width: 100%;
             box-sizing: border-box;
-            margin-top: auto;
-            /* Push to bottom */
         }
 
         /* Stats Table */
@@ -472,24 +483,6 @@
             border: 2px solid var(--primary-color);
         }
 
-        .choice-icon {
-            font-size: 3rem;
-        }
-
-        .choice-label {
-            font-size: 1rem;
-        }
-
-        .choice-target {
-            font-size: 0.8rem;
-            color: #666;
-            background: #eee;
-            padding: 4px 8px;
-            border-radius: 4px;
-            width: 100%;
-            box-sizing: border-box;
-        }
-
         /* Player Token Animation */
         .player-token {
             position: absolute;
@@ -518,7 +511,7 @@
 <body>
 
     <h1>The Probability Gauntlet</h1>
-    <div class="subtitle">Use math to choose the best path. Avoid the penalties to win!</div>
+    <div class="subtitle">Use math to choose the best path. Pass the challenges for the best score!</div>
 
     <div class="stats">
         <div>Score: <span id="turn-count">0</span></div>
@@ -546,24 +539,25 @@
     <div id="challenge-modal">
         <div class="modal-content">
             <h2>⚠️ Challenge Gate!</h2>
-            <p>Square <span id="gate-number"></span></p>
-            <p>Choose the option with the highest probability to avoid the -2 penalty.</p>
+            <!-- <p>Square <span id="gate-number"></span></p> -->
+            <p>Choose the option with the highest probability.<br>Pass the challenge or move back 2 places.</p>
 
             <div id="modal-anim-stage" class="anim-stage" style="display:none;"></div>
 
             <div id="choice-buttons" class="choice-container">
                 <button class="choice-btn" onclick="game.attemptChallenge('dice')">
-                    <div class="choice-icon">🎲</div>
+                    <div class="choice-icon">🎲🎲</div>
                     <span class="choice-label">Roll Dice</span>
                     <span class="choice-target" id="target-dice">Target...</span>
                 </button>
                 <button class="choice-btn" onclick="game.attemptChallenge('card')">
-                    <div class="choice-icon">🃏</div>
+                    <div class="choice-icon">♠️</div>
                     <span class="choice-label">Draw Card</span>
                     <span class="choice-target" id="target-card">Target...</span>
                 </button>
                 <button class="choice-btn" onclick="game.attemptChallenge('token')">
-                    <div class="choice-icon">🛍️</div>
+                    <div class="choice-icon">👜️</div>
+                    <div class="token-bag-info" id="modal-token-bag-info"></div>
                     <span class="choice-label">Pull Token</span>
                     <span class="choice-target" id="target-token">Target...</span>
                 </button>
@@ -762,6 +756,7 @@
                     const btn = document.getElementById('roll-btn');
                     btn.innerText = "New Game";
                     btn.onclick = () => game.resetGame();
+                    btn.disabled = false;
                     this.saveHighScore(this.turns);
                     return;
                 }
@@ -778,31 +773,18 @@
             triggerChallenge(gateNum) {
                 this.currentGate = gateNum; // Store for attemptChallenge
                 const rules = CHALLENGES[gateNum];
-                document.getElementById('gate-number').innerText = gateNum;
+                // document.getElementById('gate-number').innerText = gateNum;
                 document.getElementById('target-dice').innerText = `Success if: ${rules.dice.desc}`;
                 document.getElementById('target-card').innerText = `Success if: ${rules.card.desc}`;
                 document.getElementById('target-token').innerText = `Success if: ${rules.token.desc}`;
 
-                // Inject Token Bag Visuals into the Token Button (or above it)
-                // We'll just ensure the modal has the bag info if needed, but user asked for consistency.
-                // Let's update the token button icon to include the bag summary if possible, or just rely on the main page visuals?
-                // User said: "We should use the same image... preferrably the one in the main page".
-                // The main page has the full bag breakdown. Let's clone that into the modal or just ensure the token button looks good.
-                // Actually, let's just make the token button icon the bag and add the summary text below the label.
-
+                // Populate token bag info
                 const starCount = CONFIG.tokens.filter(t => t === 'star').length;
                 const diamondCount = CONFIG.tokens.filter(t => t === 'diamond').length;
                 const circleCount = CONFIG.tokens.filter(t => t === 'circle').length;
                 const bagSummary = `★${starCount} ◆${diamondCount} ●${circleCount}`;
 
-                // Update the Token button HTML dynamically to include summary
-                const tokenBtn = document.querySelector('button[onclick="game.attemptChallenge(\'token\')"]');
-                tokenBtn.innerHTML = `
-                    <div class="choice-icon">👜</div>
-                    <span class="choice-label">Pull Token</span>
-                    <span style="font-size:0.8rem; color:#555;">${bagSummary}</span>
-                    <span class="choice-target" id="target-token">Success if: ${rules.token.desc}</span>
-                `;
+                document.getElementById('modal-token-bag-info').innerText = bagSummary;
 
                 // Reset Modal UI
                 document.getElementById('choice-buttons').style.display = 'flex';
@@ -954,7 +936,7 @@
                     `<span style="color:var(--gate-color)">${result}. FAILED!</span>`;
 
                 if (success) {
-                    msg += ` Stay at Square ${this.pos}.`;
+                    // msg += ` Stay at Square ${this.pos}.`;
                     this.log(`Challenge Passed: ${result}`);
                 } else {
                     const penaltyPos = Math.max(0, this.pos - 2);
@@ -963,7 +945,7 @@
                     this.log(`Challenge Failed: ${result}. Moved back.`);
                 }
 
-                msg += `<br><strong>Score Adjustment: ${scoreAdj > 0 ? '+' + scoreAdj : scoreAdj}</strong> (${isOptimal ? 'Optimal Choice Bonus' : 'Sub-optimal Penalty'})`;
+                msg += `<br><strong>Score Adjustment: ${scoreAdj > 0 ? '+' + scoreAdj : scoreAdj}</strong> (${isOptimal ? 'Best Choice Bonus' : 'Choice Penalty'})`;
                 msg += tableHTML;
 
                 feedbackEl.innerHTML = msg;
