@@ -581,16 +581,70 @@
             ]
         };
 
-        const CHALLENGES = {
-            3: { dice: { desc: "Sum ≤ 5", func: s => s <= 5 }, card: { desc: "Club", func: c => c.suit === '♣' }, token: { desc: "Star", func: t => t === 'star' } },
-            6: { dice: { desc: "Sum is Prime", func: s => [2, 3, 5, 7, 11].includes(s) }, card: { desc: "Diamond", func: c => c.suit === '♦' }, token: { desc: "Diamond", func: t => t === 'diamond' } },
-            9: { dice: { desc: "Doubles", func: (s, d1, d2) => d1 === d2 }, card: { desc: "Face Card", func: c => ['J', 'Q', 'K'].includes(c.rank) }, token: { desc: "Star", func: t => t === 'star' } },
-            12: { dice: { desc: "Sum ≥ 10", func: s => s >= 10 }, card: { desc: "Black Card", func: c => ['♣', '♠'].includes(c.suit) }, token: { desc: "Circle", func: t => t === 'circle' } },
-            15: { dice: { desc: "Odd Sum", func: s => s % 2 !== 0 }, card: { desc: "Heart", func: c => c.suit === '♥' }, token: { desc: "NOT Circle", func: t => t !== 'circle' } },
-            18: { dice: { desc: "Divisible by 4", func: s => s % 4 === 0 }, card: { desc: "Rank is 7", func: c => c.rank === '7' }, token: { desc: "Diamond", func: t => t === 'diamond' } },
-            21: { dice: { desc: "Divisible by 3", func: s => s % 3 === 0 }, card: { desc: "Spade", func: c => c.suit === '♠' }, token: { desc: "Star", func: t => t === 'star' } },
-            24: { dice: { desc: "Even Sum", func: s => s % 2 === 0 }, card: { desc: "Red Card", func: c => ['♥', '♦'].includes(c.suit) }, token: { desc: "Circle", func: t => t === 'circle' } }
+        // Challenge condition pools
+        const CHALLENGE_POOLS = {
+            dice: [
+                { desc: "Sum ≤ 5", func: s => s <= 5 },
+                { desc: "Sum is Prime", func: s => [2, 3, 5, 7, 11].includes(s) },
+                { desc: "Doubles", func: (s, d1, d2) => d1 === d2 },
+                { desc: "Sum ≥ 10", func: s => s >= 10 },
+                { desc: "Odd Sum", func: s => s % 2 !== 0 },
+                { desc: "Divisible by 4", func: s => s % 4 === 0 },
+                { desc: "Divisible by 3", func: s => s % 3 === 0 },
+                { desc: "Even Sum", func: s => s % 2 === 0 }
+            ],
+            card: [
+                { desc: "Club", func: c => c.suit === '♣' },
+                { desc: "Diamond", func: c => c.suit === '♦' },
+                { desc: "Face Card", func: c => ['J', 'Q', 'K'].includes(c.rank) },
+                { desc: "Black Card", func: c => ['♣', '♠'].includes(c.suit) },
+                { desc: "Heart", func: c => c.suit === '♥' },
+                { desc: "Rank is 7", func: c => c.rank === '7' },
+                { desc: "Spade", func: c => c.suit === '♠' },
+                { desc: "Red Card", func: c => ['♥', '♦'].includes(c.suit) }
+            ],
+            token: [
+                { desc: "Star", func: t => t === 'star' },
+                { desc: "Diamond", func: t => t === 'diamond' },
+                { desc: "Star", func: t => t === 'star' },
+                { desc: "Circle", func: t => t === 'circle' },
+                { desc: "NOT Circle", func: t => t !== 'circle' },
+                { desc: "Diamond", func: t => t === 'diamond' },
+                { desc: "Star", func: t => t === 'star' },
+                { desc: "Circle", func: t => t === 'circle' }
+            ]
         };
+
+        // Function to shuffle an array
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        // Function to generate shuffled challenges
+        function generateChallenges() {
+            const shuffledDice = shuffleArray(CHALLENGE_POOLS.dice);
+            const shuffledCard = shuffleArray(CHALLENGE_POOLS.card);
+            const shuffledToken = shuffleArray(CHALLENGE_POOLS.token);
+
+            const challenges = {};
+            CONFIG.gateSquares.forEach((square, index) => {
+                challenges[square] = {
+                    dice: shuffledDice[index],
+                    card: shuffledCard[index],
+                    token: shuffledToken[index]
+                };
+            });
+
+            return challenges;
+        }
+
+        // This will be populated when the game starts
+        let CHALLENGES = {};
 
         // --- Game Logic Engine ---
         const game = {
@@ -599,6 +653,7 @@
             isAnimating: false,
 
             init() {
+                CHALLENGES = generateChallenges(); // Generate shuffled challenges
                 this.renderBoard();
                 this.renderScenario();
                 this.loadHighScore();
@@ -1058,6 +1113,7 @@
             },
 
             resetGame() {
+                CHALLENGES = generateChallenges(); // Generate new shuffled challenges
                 this.pos = 0;
                 this.turns = 0;
                 this.isAnimating = false;
