@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Probability Gauntlet</title>
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --gate-color: #e74c3c;
+            --safe-color: #2ecc71;
+            --board-bg: #f0f2f5;
+            --text-color: #2c3e50;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--board-bg);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+            color: var(--text-color);
+        }
+
+        .subtitle {
+            margin-bottom: 20px;
+            font-style: italic;
+            color: #666;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        /* --- Game Board --- */
+        #game-board {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 8px;
+            width: 100%;
+            max-width: 800px;
+            margin-bottom: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .square {
+            aspect-ratio: 1;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            background-color: white;
+            font-weight: bold;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .square.gate {
+            border-color: var(--gate-color);
+            background-color: #fdeaea;
+        }
+
+        .square.gate::after {
+            content: "⚠️";
+            font-size: 1rem;
+            margin-top: 2px;
+        }
+
+        .square.start {
+            background-color: #e8f8f5;
+            border-color: var(--safe-color);
+        }
+
+        .square.finish {
+            background-color: #fff8e1;
+            border-color: #f1c40f;
+        }
+
+        .player-token {
+            width: 70%;
+            height: 70%;
+            background-color: var(--primary-color);
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            position: absolute;
+            z-index: 10;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* --- Controls Area --- */
+        #controls {
+            width: 100%;
+            max-width: 600px;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+            text-align: center;
+            position: sticky;
+            bottom: 20px;
+            z-index: 100;
+        }
+
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 1.1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: transform 0.1s, background 0.2s;
+        }
+
+        .btn:hover {
+            background-color: #357abd;
+            transform: translateY(-2px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* --- Challenge Modal --- */
+        #challenge-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            display: none;
+            /* Flex when active */
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .choice-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .choice-btn {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            padding: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .choice-btn:hover {
+            border-color: var(--primary-color);
+            background: #f0f7ff;
+        }
+
+        .choice-label {
+            font-weight: bold;
+            color: var(--primary-color);
+            font-size: 1.1rem;
+        }
+
+        .choice-target {
+            font-size: 0.9rem;
+            color: #555;
+        }
+
+        /* --- Animation Stages --- */
+        .anim-stage {
+            height: 150px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0;
+            font-size: 4rem;
+        }
+
+        /* Dice Animation */
+        @keyframes shake {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            25% {
+                transform: rotate(10deg);
+            }
+
+            50% {
+                transform: rotate(0deg);
+            }
+
+            75% {
+                transform: rotate(-10deg);
+            }
+
+            100% {
+                transform: rotate(0deg);
+            }
+        }
+
+        .shake {
+            animation: shake 0.2s infinite;
+        }
+
+        /* Card Flip */
+        .card {
+            width: 100px;
+            height: 140px;
+            border: 2px solid #333;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: white;
+            font-size: 2rem;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .card.red {
+            color: #e74c3c;
+        }
+
+        .card.black {
+            color: #2c3e50;
+        }
+
+        /* Token */
+        .token {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 3rem;
+            color: white;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .token-star {
+            background-color: #f1c40f;
+        }
+
+        /* Yellow */
+        .token-diamond {
+            background-color: #3498db;
+        }
+
+        /* Blue */
+        .token-circle {
+            background-color: #e74c3c;
+        }
+
+        /* Red */
+
+        /* Log */
+        #game-log {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #555;
+            min-height: 1.2em;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>The Probability Gauntlet</h1>
+    <div class="subtitle">Use math to choose the best path. Avoid the penalties to win!</div>
+
+    <div class="stats">
+        <div>Turn: <span id="turn-count">0</span></div>
+        <div>Square: <span id="current-square">0</span> / 25</div>
+    </div>
+
+    <div id="game-board">
+        <!-- Board generated by JS -->
+    </div>
+
+    <div id="controls">
+        <div id="game-log">Click 'Roll & Move' to start.</div>
+        <div class="anim-stage" id="main-anim-stage" style="display:none;">🎲</div>
+        <button id="roll-btn" class="btn" onclick="game.startTurn()">Roll & Move (d6)</button>
+    </div>
+
+    <!-- Challenge Modal -->
+    <div id="challenge-modal">
+        <div class="modal-content">
+            <h2>⚠️ Challenge Gate!</h2>
+            <p>Square <span id="gate-number"></span></p>
+            <p>Choose the option with the highest probability to avoid the -2 penalty.</p>
+
+            <div id="modal-anim-stage" class="anim-stage" style="display:none;"></div>
+
+            <div id="choice-buttons" class="choice-container">
+                <button class="choice-btn" onclick="game.attemptChallenge('dice')">
+                    <span class="choice-label">🎲 Dice</span>
+                    <span class="choice-target" id="target-dice">Target...</span>
+                </button>
+                <button class="choice-btn" onclick="game.attemptChallenge('card')">
+                    <span class="choice-label">🃏 Card</span>
+                    <span class="choice-target" id="target-card">Target...</span>
+                </button>
+                <button class="choice-btn" onclick="game.attemptChallenge('token')">
+                    <span class="choice-label">🛍️ Token</span>
+                    <span class="choice-target" id="target-token">Target...</span>
+                </button>
+            </div>
+
+            <div id="result-feedback" style="margin-top:20px; font-weight:bold; display:none;"></div>
+            <button id="close-modal-btn" class="btn" style="margin-top:20px; display:none;"
+                onclick="game.closeModal()">Continue</button>
+        </div>
+    </div>
+
+    <script>
+        // --- Game Data & Configuration ---
+        const CONFIG = {
+            boardSize: 25,
+            gateSquares: [3, 6, 9, 12, 15, 18, 21, 24],
+            tokens: [
+                ...Array(5).fill('star'),    // 5 Stars
+                ...Array(4).fill('diamond'), // 4 Diamonds
+                ...Array(3).fill('circle')   // 3 Circles
+            ]
+        };
+
+        const CHALLENGES = {
+            3: { dice: { desc: "Sum ≤ 5", func: s => s <= 5 }, card: { desc: "Club", func: c => c.suit === '♣' }, token: { desc: "Star", func: t => t === 'star' } },
+            6: { dice: { desc: "Sum is Prime", func: s => [2, 3, 5, 7, 11].includes(s) }, card: { desc: "Diamond", func: c => c.suit === '♦' }, token: { desc: "Diamond", func: t => t === 'diamond' } },
+            9: { dice: { desc: "Doubles", func: (s, d1, d2) => d1 === d2 }, card: { desc: "Face Card", func: c => ['J', 'Q', 'K'].includes(c.rank) }, token: { desc: "Star", func: t => t === 'star' } },
+            12: { dice: { desc: "Sum ≥ 10", func: s => s >= 10 }, card: { desc: "Black Card", func: c => ['♣', '♠'].includes(c.suit) }, token: { desc: "Circle", func: t => t === 'circle' } },
+            15: { dice: { desc: "Odd Sum", func: s => s % 2 !== 0 }, card: { desc: "Heart", func: c => c.suit === '♥' }, token: { desc: "NOT Circle", func: t => t !== 'circle' } },
+            18: { dice: { desc: "Divisible by 4", func: s => s % 4 === 0 }, card: { desc: "Rank is 7", func: c => c.rank === '7' }, token: { desc: "Diamond", func: t => t === 'diamond' } },
+            21: { dice: { desc: "Divisible by 3", func: s => s % 3 === 0 }, card: { desc: "Spade", func: c => c.suit === '♠' }, token: { desc: "Star", func: t => t === 'star' } },
+            24: { dice: { desc: "Even Sum", func: s => s % 2 === 0 }, card: { desc: "Red Card", func: c => ['♥', '♦'].includes(c.suit) }, token: { desc: "Circle", func: t => t === 'circle' } }
+        };
+
+        // --- Game Logic Engine ---
+        const game = {
+            pos: 0,
+            turns: 0,
+            isAnimating: false,
+
+            init() {
+                this.renderBoard();
+                this.updateUI();
+            },
+
+            renderBoard() {
+                const boardEl = document.getElementById('game-board');
+                boardEl.innerHTML = '';
+                for (let i = 0; i <= CONFIG.boardSize; i++) {
+                    const sq = document.createElement('div');
+                    sq.className = 'square';
+                    sq.id = `sq-${i}`;
+                    sq.innerText = i;
+
+                    if (i === 0) sq.classList.add('start');
+                    if (i === CONFIG.boardSize) sq.classList.add('finish');
+                    if (CONFIG.gateSquares.includes(i)) sq.classList.add('gate');
+
+                    boardEl.appendChild(sq);
+                }
+                // Add player token
+                const token = document.createElement('div');
+                token.className = 'player-token';
+                token.id = 'player-token';
+                document.getElementById('sq-0').appendChild(token);
+            },
+
+            async startTurn() {
+                if (this.isAnimating) return;
+                this.isAnimating = true;
+                this.turns++;
+                document.getElementById('roll-btn').disabled = true;
+
+                // 1. Roll main die
+                const roll = await this.animateDie(document.getElementById('main-anim-stage'));
+                const oldPos = this.pos;
+                this.pos = Math.min(this.pos + roll, CONFIG.boardSize);
+
+                this.log(`Rolled a ${roll}. Moving to square ${this.pos}.`);
+                this.moveToken();
+
+                // 2. Wait for move, then check logic
+                setTimeout(() => {
+                    document.getElementById('main-anim-stage').style.display = 'none';
+                    this.checkLanding();
+                }, 800);
+            },
+
+            moveToken() {
+                const token = document.getElementById('player-token');
+                const targetSq = document.getElementById(`sq-${this.pos}`);
+                targetSq.appendChild(token); // Moves the DOM element
+                this.updateUI();
+            },
+
+            checkLanding() {
+                // Check win
+                if (this.pos >= CONFIG.boardSize) {
+                    this.log(`🎉 FINISHED in ${this.turns} turns! Refresh to play again.`);
+                    document.getElementById('roll-btn').innerText = "Game Over";
+                    return;
+                }
+
+                // Check Gate
+                if (CONFIG.gateSquares.includes(this.pos)) {
+                    this.triggerChallenge(this.pos);
+                } else {
+                    // Safe square
+                    this.endTurn();
+                }
+            },
+
+            triggerChallenge(gateNum) {
+                const rules = CHALLENGES[gateNum];
+                document.getElementById('gate-number').innerText = gateNum;
+                document.getElementById('target-dice').innerText = `Success if: ${rules.dice.desc}`;
+                document.getElementById('target-card').innerText = `Success if: ${rules.card.desc}`;
+                document.getElementById('target-token').innerText = `Success if: ${rules.token.desc}`;
+
+                // Reset Modal UI
+                document.getElementById('choice-buttons').style.display = 'flex';
+                document.getElementById('modal-anim-stage').style.display = 'none';
+                document.getElementById('result-feedback').style.display = 'none';
+                document.getElementById('close-modal-btn').style.display = 'none';
+
+                document.getElementById('challenge-modal').style.display = 'flex';
+            },
+
+            async attemptChallenge(type) {
+                document.getElementById('choice-buttons').style.display = 'none';
+                const stage = document.getElementById('modal-anim-stage');
+                stage.innerHTML = '';
+                stage.style.display = 'flex';
+
+                let result, success;
+                const rules = CHALLENGES[this.pos];
+
+                // --- Generate Randomness & Visuals ---
+                if (type === 'dice') {
+                    // Roll 2 dice
+                    const d1 = await this.animateDie(stage, true); // true = append
+                    const d2 = await this.animateDie(stage, true);
+                    const sum = d1 + d2;
+                    success = rules.dice.func(sum, d1, d2);
+                    result = `Rolled ${d1} + ${d2} = ${sum}`;
+                }
+                else if (type === 'card') {
+                    const card = this.getRandomCard();
+                    await this.animateCard(stage, card);
+                    success = rules.card.func(card);
+                    result = `Drew ${card.rank}${card.suit}`;
+                }
+                else if (type === 'token') {
+                    const token = this.getRandomToken();
+                    await this.animateToken(stage, token);
+                    success = rules.token.func(token);
+                    result = `Pulled a ${token.toUpperCase()}`;
+                }
+
+                // --- Show Result ---
+                const feedbackEl = document.getElementById('result-feedback');
+                feedbackEl.style.display = 'block';
+
+                if (success) {
+                    feedbackEl.style.color = 'var(--safe-color)';
+                    feedbackEl.innerText = `${result}. SUCCESS! You stay at Square ${this.pos}.`;
+                    this.log(`Challenge Passed: ${result}`);
+                } else {
+                    const penaltyPos = Math.max(0, this.pos - 2);
+                    feedbackEl.style.color = 'var(--gate-color)';
+                    feedbackEl.innerText = `${result}. FAILED! Moving back to Square ${penaltyPos}.`;
+                    this.pos = penaltyPos; // Update internal logic immediately
+                    this.log(`Challenge Failed: ${result}. Moved back.`);
+                }
+
+                document.getElementById('close-modal-btn').style.display = 'inline-block';
+            },
+
+            closeModal() {
+                document.getElementById('challenge-modal').style.display = 'none';
+                this.moveToken(); // Visually update if moved back
+                this.endTurn();
+            },
+
+            endTurn() {
+                this.isAnimating = false;
+                document.getElementById('roll-btn').disabled = false;
+                this.updateUI();
+            },
+
+            updateUI() {
+                document.getElementById('turn-count').innerText = this.turns;
+                document.getElementById('current-square').innerText = this.pos;
+            },
+
+            log(msg) {
+                document.getElementById('game-log').innerText = msg;
+            },
+
+            // --- Random Generators ---
+            getRandomCard() {
+                const suits = ['♥', '♦', '♣', '♠'];
+                const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+                return {
+                    suit: suits[Math.floor(Math.random() * suits.length)],
+                    rank: ranks[Math.floor(Math.random() * ranks.length)]
+                };
+            },
+
+            getRandomToken() {
+                return CONFIG.tokens[Math.floor(Math.random() * CONFIG.tokens.length)];
+            },
+
+            // --- Animations ---
+            animateDie(container, append = false) {
+                return new Promise(resolve => {
+                    if (!append) container.innerHTML = '';
+                    if (!append) container.style.display = 'flex';
+
+                    const die = document.createElement('div');
+                    die.style.fontSize = "4rem";
+                    die.style.margin = "0 10px";
+                    die.className = "shake";
+                    container.appendChild(die);
+
+                    const faces = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
+                    let count = 0;
+                    const interval = setInterval(() => {
+                        die.innerText = faces[Math.floor(Math.random() * 6)];
+                        count++;
+                        if (count > 10) {
+                            clearInterval(interval);
+                            die.classList.remove("shake");
+                            const val = Math.floor(Math.random() * 6) + 1;
+                            die.innerText = faces[val - 1];
+                            resolve(val);
+                        }
+                    }, 80);
+                });
+            },
+
+            animateCard(container, cardData) {
+                return new Promise(resolve => {
+                    container.innerHTML = '';
+                    const cardEl = document.createElement('div');
+                    cardEl.className = 'card shake';
+                    cardEl.style.background = `repeating-linear-gradient(45deg, #606dbc, #606dbc 10px, #465298 10px, #465298 20px)`; // Pattern back
+                    container.appendChild(cardEl);
+
+                    setTimeout(() => {
+                        cardEl.classList.remove('shake');
+                        cardEl.style.background = 'white';
+                        cardEl.className = `card ${['♥', '♦'].includes(cardData.suit) ? 'red' : 'black'}`;
+                        cardEl.innerHTML = `<div>${cardData.rank}</div><div>${cardData.suit}</div>`;
+                        resolve();
+                    }, 1000);
+                });
+            },
+
+            animateToken(container, type) {
+                return new Promise(resolve => {
+                    container.innerHTML = '👜'; // Bag icon
+                    container.classList.add('shake');
+
+                    setTimeout(() => {
+                        container.classList.remove('shake');
+                        container.innerHTML = '';
+                        const tokenEl = document.createElement('div');
+                        tokenEl.className = `token token-${type}`;
+                        // Symbol
+                        let symbol = '';
+                        if (type === 'star') symbol = '★';
+                        if (type === 'diamond') symbol = '◆';
+                        if (type === 'circle') symbol = '●';
+                        tokenEl.innerText = symbol;
+
+                        container.appendChild(tokenEl);
+                        resolve();
+                    }, 1000);
+                });
+            }
+        };
+
+        // Start
+        game.init();
+
+    </script>
+</body>
+
+</html>
