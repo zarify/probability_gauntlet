@@ -40,21 +40,35 @@
         }
 
         /* --- Game Board --- */
-        #game-board {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
-            gap: 8px;
+        #game-board-container {
             width: 100%;
             max-width: 800px;
+            overflow-x: hidden;
+            /* Hide scrollbar, we animate it */
             margin-bottom: 20px;
             background: white;
-            padding: 15px;
+            padding: 15px 0;
+            /* Vertical padding only */
             border-radius: 12px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: relative;
+            /* For absolute positioning context if needed */
+        }
+
+        #game-board {
+            display: flex;
+            gap: 8px;
+            padding: 0 50%;
+            /* Padding to allow centering first/last squares */
+            width: max-content;
+            transition: transform 0.5s ease;
+            /* Smooth scroll if using transform, but we might use scrollLeft */
         }
 
         .square {
-            aspect-ratio: 1;
+            width: 80px;
+            height: 80px;
+            flex-shrink: 0;
             border: 2px solid #ddd;
             border-radius: 8px;
             display: flex;
@@ -308,6 +322,196 @@
             font-size: 1.2rem;
             font-weight: bold;
         }
+
+        /* --- Game Scenario Info --- */
+        #game-scenario {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            width: 100%;
+            max-width: 800px;
+            margin-bottom: 20px;
+        }
+
+        .scenario-card {
+            background: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+            position: relative;
+        }
+
+        .scenario-icon {
+            font-size: 1.5rem;
+        }
+
+        .scenario-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .scenario-label {
+            font-weight: bold;
+            color: #555;
+            font-size: 0.8rem;
+        }
+
+        /* Token Bag Tooltip */
+        .token-bag-container {
+            cursor: help;
+        }
+
+        .token-tooltip {
+            visibility: hidden;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 8px;
+            position: absolute;
+            z-index: 1000;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: max-content;
+            max-width: 250px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .token-tooltip::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #333 transparent transparent transparent;
+        }
+
+        .token-bag-container:hover .token-tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .tooltip-tokens {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        /* Updated Challenge Modal */
+        .choice-container {
+            flex-direction: row;
+            /* Horizontal layout */
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .choice-btn {
+            flex-direction: column;
+            width: 130px;
+            min-height: 180px;
+            /* Ensure consistent height */
+            justify-content: flex-start;
+            /* Align content to top */
+            text-align: center;
+            gap: 10px;
+            padding: 15px 10px;
+            /* Add padding */
+        }
+
+        .choice-target {
+            font-size: 0.8rem;
+            color: #666;
+            background: #eee;
+            padding: 4px 8px;
+            border-radius: 4px;
+            width: 100%;
+            box-sizing: border-box;
+            margin-top: auto;
+            /* Push to bottom */
+        }
+
+        /* Stats Table */
+        .stats-table {
+            width: 100%;
+            margin-top: 15px;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .stats-table th,
+        .stats-table td {
+            padding: 6px;
+            border-bottom: 1px solid #eee;
+            text-align: center;
+        }
+
+        .stats-table th {
+            background-color: #f8f9fa;
+            color: #555;
+        }
+
+        .stats-row-best {
+            background-color: #e8f8f5;
+            font-weight: bold;
+            color: #27ae60;
+        }
+
+        .stats-row-user {
+            border: 2px solid var(--primary-color);
+        }
+
+        .choice-icon {
+            font-size: 3rem;
+        }
+
+        .choice-label {
+            font-size: 1rem;
+        }
+
+        .choice-target {
+            font-size: 0.8rem;
+            color: #666;
+            background: #eee;
+            padding: 4px 8px;
+            border-radius: 4px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        /* Player Token Animation */
+        .player-token {
+            position: absolute;
+            /* Absolute within game-board */
+            width: 40px;
+            /* Fixed size, not relative to square */
+            height: 40px;
+            /* Initial position will be set by JS */
+            transition: top 0.5s cubic-bezier(0.25, 1, 0.5, 1), left 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+            margin: 0;
+            /* Remove auto margins if any */
+            /* Center the token on the coordinate */
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        /* Highlight for best probability */
+        .best-choice {
+            border: 2px solid #2ecc71;
+            background-color: #e8f8f5;
+        }
     </style>
 </head>
 
@@ -317,12 +521,19 @@
     <div class="subtitle">Use math to choose the best path. Avoid the penalties to win!</div>
 
     <div class="stats">
-        <div>Turn: <span id="turn-count">0</span></div>
+        <div>Score: <span id="turn-count">0</span></div>
         <div>Square: <span id="current-square">0</span> / 25</div>
+        <div>Best: <span id="best-score">-</span></div>
     </div>
 
-    <div id="game-board">
-        <!-- Board generated by JS -->
+    <div id="game-scenario">
+        <!-- Populated by JS -->
+    </div>
+
+    <div id="game-board-container">
+        <div id="game-board">
+            <!-- Board generated by JS -->
+        </div>
     </div>
 
     <div id="controls">
@@ -342,15 +553,18 @@
 
             <div id="choice-buttons" class="choice-container">
                 <button class="choice-btn" onclick="game.attemptChallenge('dice')">
-                    <span class="choice-label">🎲 Dice</span>
+                    <div class="choice-icon">🎲</div>
+                    <span class="choice-label">Roll Dice</span>
                     <span class="choice-target" id="target-dice">Target...</span>
                 </button>
                 <button class="choice-btn" onclick="game.attemptChallenge('card')">
-                    <span class="choice-label">🃏 Card</span>
+                    <div class="choice-icon">🃏</div>
+                    <span class="choice-label">Draw Card</span>
                     <span class="choice-target" id="target-card">Target...</span>
                 </button>
                 <button class="choice-btn" onclick="game.attemptChallenge('token')">
-                    <span class="choice-label">🛍️ Token</span>
+                    <div class="choice-icon">🛍️</div>
+                    <span class="choice-label">Pull Token</span>
                     <span class="choice-target" id="target-token">Target...</span>
                 </button>
             </div>
@@ -392,7 +606,64 @@
 
             init() {
                 this.renderBoard();
+                this.renderScenario();
+                this.loadHighScore();
                 this.updateUI();
+                // Initial token position
+                setTimeout(() => this.moveToken(true), 100);
+            },
+
+            renderScenario() {
+                const scenarioEl = document.getElementById('game-scenario');
+
+                // 1. Token Bag
+                const starCount = CONFIG.tokens.filter(t => t === 'star').length;
+                const diamondCount = CONFIG.tokens.filter(t => t === 'diamond').length;
+                const circleCount = CONFIG.tokens.filter(t => t === 'circle').length;
+
+                const tokenTooltipHTML = CONFIG.tokens.map(t => {
+                    if (t === 'star') return '★';
+                    if (t === 'diamond') return '◆';
+                    if (t === 'circle') return '●';
+                }).join(' ');
+
+                const tokensHTML = `
+                    <div class="scenario-card token-bag-container">
+                        <div class="scenario-icon">👜</div>
+                        <div class="scenario-details">
+                            <div class="scenario-label">Token Bag</div>
+                            <div>★x${starCount} ◆x${diamondCount} ●x${circleCount}</div>
+                        </div>
+                        <div class="token-tooltip">
+                            <div class="tooltip-tokens">${tokenTooltipHTML}</div>
+                            <div style="font-size:0.8rem; margin-top:5px;">(Hover to see all)</div>
+                        </div>
+                    </div>
+                `;
+
+                // 2. Card Deck
+                const cardsHTML = `
+                    <div class="scenario-card">
+                        <div class="scenario-icon">🃏</div>
+                        <div class="scenario-details">
+                            <div class="scenario-label">Card Deck</div>
+                            <div>52 Cards (Standard)</div>
+                        </div>
+                    </div>
+                `;
+
+                // 3. Dice
+                const diceHTML = `
+                    <div class="scenario-card">
+                        <div class="scenario-icon">🎲</div>
+                        <div class="scenario-details">
+                            <div class="scenario-label">Dice</div>
+                            <div>2x d6 (Sum 2-12)</div>
+                        </div>
+                    </div>
+                `;
+
+                scenarioEl.innerHTML = tokensHTML + cardsHTML + diceHTML;
             },
 
             renderBoard() {
@@ -410,11 +681,11 @@
 
                     boardEl.appendChild(sq);
                 }
-                // Add player token
+                // Add player token to the board container, not the square
                 const token = document.createElement('div');
                 token.className = 'player-token';
                 token.id = 'player-token';
-                document.getElementById('sq-0').appendChild(token);
+                boardEl.appendChild(token);
             },
 
             async startTurn() {
@@ -438,18 +709,60 @@
                 }, 800);
             },
 
-            moveToken() {
+            centerCamera(sqIndex) {
+                const container = document.getElementById('game-board-container');
+                const square = document.getElementById(`sq-${sqIndex}`);
+                if (!square) return;
+
+                // Calculate scroll position to center the square
+                // Container width / 2 - Square width / 2
+                const scrollTarget = square.offsetLeft - (container.clientWidth / 2) + (square.clientWidth / 2);
+
+                container.scrollTo({
+                    left: scrollTarget,
+                    behavior: 'smooth'
+                });
+            },
+
+            moveToken(instant = false) {
                 const token = document.getElementById('player-token');
                 const targetSq = document.getElementById(`sq-${this.pos}`);
-                targetSq.appendChild(token); // Moves the DOM element
+
+                // Ensure camera centers on the target
+                this.centerCamera(this.pos);
+
+                // Calculate position relative to game-board (the scrolling content)
+                // Since token is child of game-board-container (relative), we need position relative to that?
+                // Actually, let's make token child of #game-board (the long strip). 
+                // Then we just set left/top relative to that strip.
+
+                // Let's check where we appended it. In init() we did boardEl.appendChild(token).
+                // boardEl is #game-board. So it is inside the scrolling strip.
+                // So we just need offsetLeft of the square.
+
+                const relativeLeft = targetSq.offsetLeft + targetSq.clientWidth / 2;
+                const relativeTop = targetSq.offsetTop + targetSq.clientHeight / 2;
+
+                if (instant) {
+                    token.style.transition = 'none';
+                } else {
+                    token.style.transition = 'top 0.5s cubic-bezier(0.25, 1, 0.5, 1), left 0.5s cubic-bezier(0.25, 1, 0.5, 1)';
+                }
+
+                token.style.top = `${relativeTop}px`;
+                token.style.left = `${relativeLeft}px`;
+
                 this.updateUI();
             },
 
             checkLanding() {
                 // Check win
                 if (this.pos >= CONFIG.boardSize) {
-                    this.log(`🎉 FINISHED in ${this.turns} turns! Refresh to play again.`);
-                    document.getElementById('roll-btn').innerText = "Game Over";
+                    this.log(`🎉 FINISHED with Score ${this.turns}!`);
+                    const btn = document.getElementById('roll-btn');
+                    btn.innerText = "New Game";
+                    btn.onclick = () => game.resetGame();
+                    this.saveHighScore(this.turns);
                     return;
                 }
 
@@ -463,11 +776,33 @@
             },
 
             triggerChallenge(gateNum) {
+                this.currentGate = gateNum; // Store for attemptChallenge
                 const rules = CHALLENGES[gateNum];
                 document.getElementById('gate-number').innerText = gateNum;
                 document.getElementById('target-dice').innerText = `Success if: ${rules.dice.desc}`;
                 document.getElementById('target-card').innerText = `Success if: ${rules.card.desc}`;
                 document.getElementById('target-token').innerText = `Success if: ${rules.token.desc}`;
+
+                // Inject Token Bag Visuals into the Token Button (or above it)
+                // We'll just ensure the modal has the bag info if needed, but user asked for consistency.
+                // Let's update the token button icon to include the bag summary if possible, or just rely on the main page visuals?
+                // User said: "We should use the same image... preferrably the one in the main page".
+                // The main page has the full bag breakdown. Let's clone that into the modal or just ensure the token button looks good.
+                // Actually, let's just make the token button icon the bag and add the summary text below the label.
+
+                const starCount = CONFIG.tokens.filter(t => t === 'star').length;
+                const diamondCount = CONFIG.tokens.filter(t => t === 'diamond').length;
+                const circleCount = CONFIG.tokens.filter(t => t === 'circle').length;
+                const bagSummary = `★${starCount} ◆${diamondCount} ●${circleCount}`;
+
+                // Update the Token button HTML dynamically to include summary
+                const tokenBtn = document.querySelector('button[onclick="game.attemptChallenge(\'token\')"]');
+                tokenBtn.innerHTML = `
+                    <div class="choice-icon">👜</div>
+                    <span class="choice-label">Pull Token</span>
+                    <span style="font-size:0.8rem; color:#555;">${bagSummary}</span>
+                    <span class="choice-target" id="target-token">Success if: ${rules.token.desc}</span>
+                `;
 
                 // Reset Modal UI
                 document.getElementById('choice-buttons').style.display = 'flex';
@@ -475,22 +810,90 @@
                 document.getElementById('result-feedback').style.display = 'none';
                 document.getElementById('close-modal-btn').style.display = 'none';
 
+                // Reset highlights
+                document.querySelectorAll('.choice-btn').forEach(btn => btn.classList.remove('best-choice'));
+
                 document.getElementById('challenge-modal').style.display = 'flex';
             },
 
+            calculateProbabilities(gateNum) {
+                const rules = CHALLENGES[gateNum];
+
+                // 1. Dice (2d6)
+                let successCount = 0;
+                for (let i = 1; i <= 6; i++) {
+                    for (let j = 1; j <= 6; j++) {
+                        if (rules.dice.func(i + j, i, j)) successCount++;
+                    }
+                }
+                const diceProb = successCount / 36;
+
+                // 2. Card (52 deck)
+                const suits = ['♥', '♦', '♣', '♠'];
+                const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+                let cardSuccess = 0;
+                for (let s of suits) {
+                    for (let r of ranks) {
+                        if (rules.card.func({ suit: s, rank: r })) cardSuccess++;
+                    }
+                }
+                const cardProb = cardSuccess / 52;
+
+                // 3. Token (Bag)
+                let tokenSuccess = 0;
+                for (let t of CONFIG.tokens) {
+                    if (rules.token.func(t)) tokenSuccess++;
+                }
+                const tokenProb = tokenSuccess / CONFIG.tokens.length;
+
+                return {
+                    dice: { prob: diceProb, count: successCount, total: 36, label: "Dice" },
+                    card: { prob: cardProb, count: cardSuccess, total: 52, label: "Card" },
+                    token: { prob: tokenProb, count: tokenSuccess, total: CONFIG.tokens.length, label: "Token" }
+                };
+            },
+
+            gcd(a, b) {
+                return b ? this.gcd(b, a % b) : a;
+            },
+
+            simplifyFraction(num, den) {
+                const common = this.gcd(num, den);
+                return `${num / common}/${den / common}`;
+            },
+
             async attemptChallenge(type) {
+                // Calculate stats first
+                const stats = this.calculateProbabilities(this.currentGate);
+
+                // Highlight best choice(s)
+                const maxProb = Math.max(stats.dice.prob, stats.card.prob, stats.token.prob);
+                const myStat = stats[type];
+                const isOptimal = Math.abs(myStat.prob - maxProb) < 0.0001;
+
+                // Scoring Adjustment
+                let scoreAdj = 0;
+                if (isOptimal) {
+                    this.turns -= 1; // Bonus
+                    scoreAdj = -1;
+                } else {
+                    this.turns += 1; // Penalty
+                    scoreAdj = 1;
+                }
+                this.updateUI();
+
+                // Show visuals
                 document.getElementById('choice-buttons').style.display = 'none';
                 const stage = document.getElementById('modal-anim-stage');
                 stage.innerHTML = '';
                 stage.style.display = 'flex';
 
                 let result, success;
-                const rules = CHALLENGES[this.pos];
+                const rules = CHALLENGES[this.currentGate];
 
                 // --- Generate Randomness & Visuals ---
                 if (type === 'dice') {
-                    // Roll 2 dice
-                    const d1 = await this.animateDie(stage, true); // true = append
+                    const d1 = await this.animateDie(stage, true);
                     const d2 = await this.animateDie(stage, true);
                     const sum = d1 + d2;
                     success = rules.dice.func(sum, d1, d2);
@@ -509,21 +912,61 @@
                     result = `Pulled a ${token.toUpperCase()}`;
                 }
 
-                // --- Show Result ---
+                // --- Generate Stats Table ---
+                let tableHTML = `
+                    <table class="stats-table">
+                        <thead>
+                            <tr>
+                                <th>Option</th>
+                                <th>Probability</th>
+                                <th>Fraction</th>
+                                <th>Note</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                ['dice', 'card', 'token'].forEach(key => {
+                    const s = stats[key];
+                    const isBest = Math.abs(s.prob - maxProb) < 0.0001;
+                    const isUser = key === type;
+                    let rowClass = '';
+                    if (isBest) rowClass += ' stats-row-best';
+                    if (isUser) rowClass += ' stats-row-user';
+
+                    tableHTML += `
+                        <tr class="${rowClass.trim()}">
+                            <td>${s.label}</td>
+                            <td>${(s.prob * 100).toFixed(1)}%</td>
+                            <td>${this.simplifyFraction(s.count, s.total)}</td>
+                            <td>${isBest ? 'Best Choice' : ''} ${isUser ? '(You)' : ''}</td>
+                        </tr>
+                    `;
+                });
+                tableHTML += `</tbody></table>`;
+
+                // --- Show Result & Stats ---
                 const feedbackEl = document.getElementById('result-feedback');
                 feedbackEl.style.display = 'block';
 
+                let msg = success ?
+                    `<span style="color:var(--safe-color)">${result}. SUCCESS!</span>` :
+                    `<span style="color:var(--gate-color)">${result}. FAILED!</span>`;
+
                 if (success) {
-                    feedbackEl.style.color = 'var(--safe-color)';
-                    feedbackEl.innerText = `${result}. SUCCESS! You stay at Square ${this.pos}.`;
+                    msg += ` Stay at Square ${this.pos}.`;
                     this.log(`Challenge Passed: ${result}`);
                 } else {
                     const penaltyPos = Math.max(0, this.pos - 2);
-                    feedbackEl.style.color = 'var(--gate-color)';
-                    feedbackEl.innerText = `${result}. FAILED! Moving back to Square ${penaltyPos}.`;
-                    this.pos = penaltyPos; // Update internal logic immediately
+                    msg += ` Back to Square ${penaltyPos}.`;
+                    this.pos = penaltyPos;
                     this.log(`Challenge Failed: ${result}. Moved back.`);
                 }
+
+                msg += `<br><strong>Score Adjustment: ${scoreAdj > 0 ? '+' + scoreAdj : scoreAdj}</strong> (${isOptimal ? 'Optimal Choice Bonus' : 'Sub-optimal Penalty'})`;
+                msg += tableHTML;
+
+                feedbackEl.innerHTML = msg;
 
                 document.getElementById('close-modal-btn').style.display = 'inline-block';
             },
@@ -630,6 +1073,36 @@
                         resolve();
                     }, 1000);
                 });
+            },
+
+            resetGame() {
+                this.pos = 0;
+                this.turns = 0;
+                this.isAnimating = false;
+                const btn = document.getElementById('roll-btn');
+                btn.disabled = false;
+                btn.innerText = "Roll & Move (d6)";
+                btn.onclick = () => game.startTurn();
+                this.log("Game reset. Good luck!");
+
+                // Reset UI
+                this.moveToken();
+                this.updateUI();
+            },
+
+            saveHighScore(score) {
+                const currentBest = localStorage.getItem('probGauntletBest');
+                // Lower score is better
+                if (!currentBest || score < parseInt(currentBest)) {
+                    localStorage.setItem('probGauntletBest', score);
+                    this.log(`🏆 New Best Score: ${score}!`);
+                    this.loadHighScore();
+                }
+            },
+
+            loadHighScore() {
+                const best = localStorage.getItem('probGauntletBest');
+                document.getElementById('best-score').innerText = best ? best : '-';
             }
         };
 
